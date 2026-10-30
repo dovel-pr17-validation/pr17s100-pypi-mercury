@@ -1,0 +1,285 @@
+---
+title: Chat
+description: How to build chat-style interfaces with the Chat container in a Mercury App
+---
+
+import { Code } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import MercuryDemo from '../../../../components/MercuryDemoIframe.astro'
+
+The **Chat** widget is a container for displaying a sequence of `Message` widgets.
+It provides a simple API for building **chat-style interfaces** and ensures that
+new messages are **automatically scrolled into view**.
+
+`Chat` does not render messages itself — each message is responsible for its own
+content and layout. The role of `Chat` is to **manage message order, visibility,
+and scrolling behavior**.
+
+## Live Demo
+
+You can try the `Chat` widget directly in this interactive example:
+
+<MercuryDemo
+  iframeSrc="https://docs.ismvp.org/mercury/echo-chat?no-navbar"
+  notebookUrl="https://github.com/mljar/mercury/blob/main/docs/notebooks/chat.ipynb"
+/> 
+
+
+## Basic Usage
+
+Create a chat container and add messages to it:
+
+```python
+import mercury as mr
+
+chat = mr.Chat()
+
+chat.add(mr.Message(markdown="Hello 👋", role="assistant"))
+chat.add(mr.Message(markdown="Hi!", role="user"))
+```
+
+Messages are displayed in the order they are added.
+
+## Chat + Message Together
+
+`Chat` is designed to work together with the `Message` widget.
+
+Each `Message`:
+
+* renders its own content (Markdown, HTML, plots, tables, etc.)
+* controls avatar, emoji, and formatting
+
+`Chat`:
+
+* stacks messages vertically
+* shows a placeholder when empty
+* scrolls automatically when new messages appear
+
+## Auto-Scrolling Behavior ⭐
+
+One of the key features of `Chat` is **automatic scrolling**.
+
+Whenever a new message is added:
+
+* the chat scrolls to the **most recent message**
+* scrolling waits briefly to allow large outputs (plots, images) to finish rendering
+* a fixed-height chat stops following new content when the reader scrolls upward
+
+Auto-follow resumes when the reader returns near the bottom of the fixed-height chat.
+
+This makes `Chat` suitable for:
+
+* conversational UIs
+* LLM chat apps
+* data exploration assistants
+* streaming outputs
+
+<Aside>
+By default, `Chat` does not create its own scrollbar.
+Scrolling happens in the surrounding Mercury application container.
+Set `height` when you want the chat itself to scroll.
+</Aside>
+
+## Fixed Height
+
+Use `height` to create a fixed-height chat area with internal vertical scrolling.
+This is useful in column layouts where one side of the app contains a chat.
+
+```python
+import mercury as mr
+
+left, right = mr.Columns([0.4, 0.6])
+
+with left:
+    chat = mr.Chat(height="600px")
+
+with right:
+    _ = mr.Markdown("Controls or analysis output")
+```
+
+The value accepts CSS height strings, for example `"600px"`, `"70vh"`, or
+`"calc(100vh - 120px)"`.
+
+## Displaying Rich Outputs in Chat
+
+Because `Message` is a generic output container, `Chat` can display **any output
+supported by Mercury**.
+
+### Chat with Charts
+
+```python
+import matplotlib.pyplot as plt
+import mercury as mr
+
+chat = mr.Chat()
+
+msg = mr.Message(markdown="Here is the chart:")
+chat.add(msg)
+
+with msg:
+    plt.plot([1, 2, 3], [2, 1, 4])
+    plt.title("Example plot")
+    plt.show()
+```
+
+The plot is rendered **inside the chat message**, and the chat scrolls automatically.
+
+### Chat with DataFrames
+
+```python
+import pandas as pd
+import mercury as mr
+
+chat = mr.Chat()
+
+df = pd.DataFrame({
+    "product": ["A", "B", "C"],
+    "sales": [120, 90, 150]
+})
+
+msg = mr.Message(markdown="Sales data:")
+chat.add(msg)
+
+with msg:
+    display(df)
+```
+
+This pattern is ideal for **conversational data analysis**.
+
+## Streaming Responses
+
+A common pattern is to add an empty message first, then update it incrementally:
+
+```python
+msg = mr.Message()
+chat.add(msg)
+
+msg.append_markdown("Thinking")
+msg.append_markdown("...")
+msg.append_markdown("\n\nAnswer ready!")
+```
+
+The chat scrolls as content grows, making it ideal for **LLM streaming responses**.
+Streaming scroll updates are debounced, so many small chunks are coalesced into
+fewer scroll operations.
+
+## Chat Props
+
+### placeholder
+
+**type:** `string`
+
+Text displayed when the chat contains no messages.
+
+Default:
+
+```text
+💬 No messages yet. Start the conversation!
+```
+
+---
+
+### scroll_container_selector
+
+**type:** `string`
+
+CSS selector used to locate the preferred scrollable container.
+
+Default:
+
+```text
+#mercury-main-panel, .mercury-main-panel
+```
+
+This is usually the main content area of a Mercury App.
+
+<Aside>
+You usually do not need to change this value unless you are embedding Chat
+inside a custom layout.
+</Aside>
+
+---
+
+### height
+
+**type:** `string`
+
+CSS height for the chat message container.
+
+Default: `""`
+
+If empty, Chat keeps its natural content height and the surrounding app/page
+container scrolls. If provided, Chat uses that fixed height and enables internal
+vertical scrolling. A fixed-height chat always owns its scrollbar, even before its
+content is tall enough to overflow, so multiple chats cannot compete for the page
+scroll position.
+
+Examples:
+
+```python
+mr.Chat(height="600px")
+mr.Chat(height="70vh")
+mr.Chat(height="calc(100vh - 120px)")
+```
+
+---
+
+### scroll_debounce
+
+**type:** `float`
+
+Debounce delay in seconds for auto-scrolling after streamed message content changes.
+
+Default: `0.1`
+
+Use a lower value for more immediate scrolling, or a higher value to reduce scroll
+updates during very fast token streams.
+
+```python
+mr.Chat(scroll_debounce=0.05)
+mr.Chat(scroll_debounce=0)
+```
+
+---
+
+## Chat Methods
+
+### add()
+
+Add a `Message` to the chat and scroll to it.
+
+```python
+chat.add(mr.Message(markdown="New message"))
+```
+
+---
+
+### clear()
+
+Remove all messages and show the placeholder.
+
+```python
+chat.clear()
+```
+
+---
+
+## What Chat Does Not Do
+
+To avoid confusion, it is important to note that `Chat`:
+
+* does not format messages
+* does not limit message types
+* does not manage user input
+* does not impose a conversation structure
+
+It is a **lightweight container**, not a full chat application framework.
+
+---
+
+## Notes
+
+* `Chat` manages **ordering and scrolling only**
+* All rendering logic lives in the `Message` widget
+* Auto-scrolling is resilient to large outputs (plots, images)
+* Internally, scrolling is implemented using a small frontend helper widget

@@ -1,0 +1,57 @@
+{% extends "page.html" %}
+
+{% block stylesheet %}
+{% endblock %}
+
+{% block site %}
+  <header class="mercury-page-header">
+    <div class="mercury-page-header-inner">
+      <div class="mercury-page-brand">{{ page_title or 'Mercury' }}</div>
+    </div>
+  </header>
+
+<main class="mercury-page-main">
+  <div class="mercury-page-card">
+    {% if login_available %}
+      <h1 class="mercury-page-title">{% trans %}Log in{% endtrans %}</h1>
+      <form action="{{ base_url }}login?next={{ next }}" method="post">
+        {{ xsrf_form_html() | safe }}
+
+        <div class="mercury-page-row">
+          <label for="password_input" class="mercury-page-label">
+            <strong>
+              {% if token_available %}
+                {% trans %}Password or token:{% endtrans %}
+              {% else %}
+                {% trans %}Password:{% endtrans %}
+              {% endif %}
+            </strong>
+          </label>
+          <input type="password" name="password" id="password_input" class="mercury-page-input">
+        </div>
+
+        <div class="mercury-page-row">
+          <button type="submit" class="mercury-page-button" id="login_submit">
+            {% trans %}Log in{% endtrans %}
+          </button>
+        </div>
+      </form>
+    {% else %}
+      <p>{% trans %}No login available, you shouldn't be seeing this page.{% endtrans %}</p>
+    {% endif %}
+
+    {% if message %}
+      <div class="mercury-page-row">
+        {% for key in message %}
+          <div class="mercury-page-message {{ key }}">{{ message[key] }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+</main>
+
+{% endblock %}
+
+{% block script %}
+{# no extra JS needed #}
+{% endblock %}

@@ -1,0 +1,206 @@
+---
+
+title: CheckBox
+description: How to use the CheckBox widget in the interactive Mercury App
+---
+
+import { Code } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import MercuryDemo from '../../../../components/MercuryDemoIframe.astro'
+
+The **CheckBox** widget displays a boolean control that lets users toggle a value between **True** and **False**.
+It is useful for enabling/disabling features, turning options on/off, or controlling conditional logic in your Mercury App.
+
+## Live Demo
+
+You can try the `CheckBox` widget directly in this interactive example:
+
+<MercuryDemo
+  iframeSrc="https://docs.ismvp.org/mercury/input-widgets?no-navbar"
+  notebookUrl="https://github.com/mljar/mercury/blob/main/docs/notebooks/input-widgets.ipynb"
+/> 
+
+
+## Usage
+
+To create a CheckBox widget, provide a `label`.
+The current state is always available via `.value`.
+
+### Basic Example
+
+**Code**
+
+```python
+import mercury as mr
+
+cb = mr.CheckBox(
+    label="Auto-refresh"
+)
+```
+
+To get the current value:
+
+```python
+cb.value
+```
+
+---
+
+### Appearance
+
+The CheckBox supports two visual styles controlled by the `appearance` argument:
+
+* `"toggle"` — switch-style control (default)
+* `"box"` — classic square checkbox
+
+**Code**
+
+```python
+import mercury as mr
+
+cb_toggle = mr.CheckBox(
+    label="Auto-refresh",
+    appearance="toggle"
+)
+
+cb_box = mr.CheckBox(
+    label="I agree",
+    appearance="box"
+)
+```
+
+To read the state:
+
+```python
+cb_toggle.value
+cb_box.value
+```
+
+---
+
+### Layout
+
+Use the `position` argument to control where the widget is displayed.
+The default is `position="sidebar"`.
+
+Available positions:
+
+* `"sidebar"` — displayed in the left sidebar (default)
+* `"inline"` — displayed in the main notebook output
+* `"bottom"` — displayed after all notebook cells
+
+**Code**
+
+```python
+cb = mr.CheckBox(
+    label="Enable option",
+    position="inline"
+)
+```
+
+---
+
+## CheckBox Props
+
+### label
+
+**type:** `string`
+
+Text displayed next to the control.
+The default is `"Enable"`.
+
+---
+
+### value
+
+**type:** `bool`
+
+Current checkbox state.
+
+* `False` means unchecked/off
+* `True` means checked/on
+
+The value always reflects the latest user selection.
+
+---
+
+### appearance
+
+**type:** `"toggle" | "box"`
+
+Controls how the checkbox is rendered:
+
+* **toggle** — switch-style control (default)
+* **box** — classic square checkbox
+
+---
+
+### url_key
+
+**type:** `string`
+
+Name of the URL query parameter used to override the initial value.
+
+* If the URL contains a valid boolean value for this key, it takes precedence over `value`.
+* Missing, empty, or invalid URL values fall back to `value`.
+* Accepted values are `true` and `false`, matched case-insensitively.
+
+Example:
+
+```text
+?enabled=true
+```
+
+---
+
+### position
+
+**type:** `"sidebar" | "inline" | "bottom"`
+
+Controls where the widget is rendered:
+
+* **sidebar** — in the sidebar (default)
+* **inline** — directly in the notebook cell output
+* **bottom** — after all notebook cells
+
+---
+
+### disabled
+
+**type:** `bool`
+
+If `True`, the widget is visible but cannot be interacted with.
+The default is `False`.
+
+---
+
+### hidden
+
+**type:** `bool`
+
+If `True`, the widget exists in the UI state but is not rendered.
+The default is `False`.
+
+---
+
+### key
+
+**type:** `string`
+
+Unique identifier used to distinguish widgets with identical arguments.
+
+<Aside>
+If the same code cell is run again, Mercury reuses the previous widget instance unless a different `key` is specified.
+
+The `key` value is required when widgets are created inside loops.
+
+</Aside>
+
+---
+
+## Notes
+
+* The widget value is always a **boolean**.
+* `url_key` can be used to initialize the widget from URL query parameters.
+* URL parameters accept only `true` and `false` values, matched case-insensitively.
+* Use `.value` in Python to access the current state.

@@ -1,0 +1,158 @@
+---
+title: Select
+description: How to use the Select widget in the interactive Mercury App
+---
+
+import { Code } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import MercuryDemo from '../../../../components/MercuryDemoIframe.astro'
+
+The **Select** widget displays a dropdown menu that lets users choose a single value from a list.
+It is ideal for filtering data, configuring options, or controlling the logic of your Mercury App.
+
+## Live Demo
+
+You can try the `Select` widget directly in this interactive example:
+
+<MercuryDemo
+  iframeSrc="https://docs.ismvp.org/mercury/input-widgets?no-navbar"
+  notebookUrl="https://github.com/mljar/mercury/blob/main/docs/notebooks/input-widgets.ipynb"
+/> 
+
+
+## Usage
+
+To create a Select widget, you only need to provide a list of choices.
+If no `value` is given, the first item from the list is selected automatically.
+
+### Basic Example
+
+**Code**
+
+```python
+import mercury as mr
+
+fruit = mr.Select(
+    label="Choose fruit",
+    choices=["Apple", "Banana", "Cherry"]
+)
+```
+
+To get the current selection:
+
+```python
+fruit.value
+```
+
+### Layout
+
+Use `position` argument to change the widget placement. The default is `position="sidebar"` and slider is displayed in the left sidebar. Other available `position` are: 
+
+- `"inline"` which displays Slider widget in the main view,
+- `"bottom"` which displays Slider widget in the bottom part of main view. 
+
+**Code**
+
+```python
+sidebar_select = Select(
+    label="Country",
+    choices=["USA", "Poland", "Japan"],
+    position="inline"
+)
+```
+
+---
+
+## Select Props
+
+### label
+
+**type:** `string`
+Text displayed above the dropdown. The deafult is `"Select"`.
+
+---
+
+### value
+
+**type:** `string`
+The initial selected option.
+If omitted or invalid, it defaults to the first element of `choices`.
+
+---
+
+### choices (required)
+
+**type:** `list[str]`
+List of available options.
+If empty, the widget raises an exception.
+
+---
+
+### url_key
+
+**type:** `string`
+
+Name of the URL query parameter used to override the initial value.
+
+* If the URL contains a valid value for this key, it takes precedence over `value`.
+* Missing, empty, or invalid URL values fall back to `value`.
+* Matching against `choices` is case-insensitive and preserves the original value from `choices`.
+
+Example:
+
+```text
+?fruit=banana
+```
+
+---
+
+### position
+
+**type:** `"sidebar" | "inline" | "bottom"`
+
+Controls where the widget is rendered:
+
+* **sidebar** — in the sidebar (default)
+* **inline** — directly in the notebook cell output
+* **bottom** — after all notebook cells
+
+---
+
+### disabled
+
+**type:** `bool`
+If `True`, the dropdown is visible but cannot be changed.
+The default is `False`.
+
+---
+
+### hidden
+
+**type:** `bool`
+If `True`, the widget exists in the UI state but is not rendered.
+The default is `False`.
+
+---
+
+### key
+
+**type:** `string`
+
+Unique identifier to distinguish widgets with identical arguments.
+
+<Aside>
+If the same code cell is run again, Mercury reuses the previous widget instance unless a different `key` is specified. 
+
+The `key` value is needed if widgets are created in the loop.
+</Aside>
+
+---
+
+## Notes
+
+* When no `value` is provided, the widget selects the **first choice**.
+* If the provided `value` is not in `choices`, it is replaced with the first element and a warning is shown.
+* `url_key` can be used to initialize the widget from URL query parameters.
+* URL values are matched against `choices` case-insensitively and use the canonical value from `choices`.
+* The current selection is always available via `.value`.
+

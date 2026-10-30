@@ -1,0 +1,183 @@
+---
+title: Tabs
+description: How to use the Tabs helper in the interactive Mercury App
+---
+
+import { Code } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import MercuryDemo from '../../../../components/MercuryDemoIframe.astro'
+
+The **Tabs** helper lets you organize content into multiple tabs, showing one panel at a time.
+It is useful for dashboards, comparisons, multi-step outputs, or grouping related results without cluttering the UI.
+
+`mr.Tabs()` returns a tuple of output areas — one per tab.
+On rerun, reused tab outputs are cleared by default so each tab shows the latest execution result.
+
+## Live Demo
+
+You can check the `Tabs` widget directly in this interactive example:
+
+<MercuryDemo
+  iframeSrc="https://docs.ismvp.org/mercury/layout-widgets?no-navbar"
+  notebookUrl="https://github.com/mljar/mercury/blob/main/docs/notebooks/layout-widgets.ipynb"
+/> 
+
+
+## Usage
+
+Call `mr.Tabs()` with a list of tab labels.
+The function returns one output widget for each tab.
+
+### Basic Example
+
+**Code**
+
+```python
+import mercury as mr
+
+tabs = mr.Tabs(labels=["Overview", "Details", "Logs"])
+
+with tabs[0]:
+    print("Overview content")
+
+with tabs[1]:
+    print("Detailed results")
+
+with tabs[2]:
+    print("Logs and debug output")
+```
+
+### Set Active Tab
+
+Use the `active` argument to select which tab is visible initially.
+
+**Code**
+
+```python
+import mercury as mr
+
+tabs = mr.Tabs(
+    labels=["Train", "Validate", "Test"],
+    active=1
+)
+
+with tabs[1]:
+    print("Validation results")
+```
+
+### Layout Position
+
+Use the `position` argument to control where the tabs are rendered.
+The default is `position="inline"`.
+
+Available values:
+
+* `"sidebar"` — render tabs in the sidebar
+* `"inline"` — render tabs in the main notebook flow (default)
+* `"bottom"` — render tabs after all notebook cells
+
+**Code**
+
+```python
+mr.Tabs(
+    labels=["Settings", "Preview"],
+    position="sidebar"
+)
+```
+
+### Append Previous Content
+
+By default, `append=False`, so content from the previous run is cleared before new content is written.
+Set `append=True` when you intentionally want a tab to accumulate output across runs.
+
+**Code**
+
+```python
+tabs = mr.Tabs(labels=["Events", "Summary"], append=True)
+
+with tabs[0]:
+    print("This output is appended on each run")
+```
+
+### Clear Content Manually
+
+Each returned tab output supports `.clear()`.
+Use it when you want to clear a tab manually from your notebook code.
+
+**Code**
+
+```python
+tabs = mr.Tabs(labels=["Events", "Summary"])
+
+tabs[0].clear()
+
+with tabs[0]:
+    print("Fresh tab content")
+```
+
+## Tabs Props
+
+### labels
+
+**type:** `list[str]`
+
+Labels displayed in the tab header.
+Each label creates one tab and one output panel.
+
+---
+
+### active
+
+**type:** `int`
+
+Index of the initially active tab (0-based).
+The default is `0`.
+
+---
+
+### position
+
+**type:** `"sidebar" | "inline" | "bottom"`
+
+Controls where the tabs container is rendered:
+
+* **sidebar** — in the sidebar
+* **inline** — directly in the notebook output (default)
+* **bottom** — after all notebook cells
+
+---
+
+### key
+
+**type:** `string`
+
+Unique identifier used to distinguish tabs with identical arguments.
+
+<Aside>
+If the same code cell is run again, Mercury reuses the previous Tabs instance unless a different `key` is specified.
+
+The `key` value is required when tabs are created inside loops.
+
+</Aside>
+
+---
+
+### append
+
+**type:** `bool`
+
+Controls what happens when Mercury reuses the same Tabs instance:
+
+* `False` — clear previous tab content before writing new content (default)
+* `True` — keep previous content and append new output
+
+---
+
+## Notes
+
+* `mr.Tabs()` returns a tuple of output widgets with `.clear()` methods.
+* Write content into a tab using `with tabs[i]: ...`.
+* Only one tab panel is visible at a time.
+* By default, reruns replace previous tab content. Use `append=True` to accumulate content.
+* Tabs automatically handle keyboard navigation (arrow keys, Home, End).
+* Content inside tabs is responsive and constrained to the container width.

@@ -1,0 +1,185 @@
+---
+title: Markdown
+description: How to display Markdown content with the Markdown widget in a Mercury App
+---
+
+import { Code } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+
+The **Markdown** widget displays Markdown-formatted text in a Mercury App.
+It converts Markdown to HTML and renders it as a first-class widget with full
+Mercury layout support.
+
+Markdown supports headings, lists, code blocks, tables, links, and images.
+Mercury automatically removes scripts and custom HTML styles, including when
+you update the widget using `.text`.
+
+<Aside title="Using custom HTML">
+If your existing content relies on custom HTML styles, you can pass
+`unsafe_allow_html=True` to `mr.Markdown()`. Use this only for content you write
+and trust—it also allows JavaScript. Leave it off for user input, uploaded files,
+or AI responses. To update Markdown content, use `.text` rather than `.value`.
+</Aside>
+
+The Markdown rendering dependency is **installed automatically with the `mercury`
+package**, so no additional setup is required.
+
+The widget supports Mercury layout placement via the `position` argument:
+
+- `"inline"` — render in the main notebook flow (default)
+- `"sidebar"` — render in the sidebar
+- `"bottom"` — render after all notebook cells
+
+---
+
+## Basic Usage
+
+Render Markdown in the main view:
+
+```python
+import mercury as mr
+
+_ = mr.Markdown(
+    "# Hello\nThis is **Markdown** rendered in Mercury."
+)
+```
+
+<Aside type="note" title="Avoid duplicate output in notebooks">
+`Markdown()` displays the widget immediately and returns the widget instance.
+IPython also displays an unassigned object when it is the last expression in a
+cell, so a bare `mr.Markdown(...)` call at the end of a cell can appear twice.
+
+Assign the result to a descriptive variable when you need the widget later, or
+to `_` when you only need the immediate display. Do not wrap an immediately
+displayed Markdown widget in an additional `display()` call.
+</Aside>
+
+## Layout
+
+Use `position` to control where the Markdown is displayed:
+
+```python
+import mercury as mr
+
+_ = mr.Markdown(
+    "## Sidebar note\nYou can put documentation or hints here.",
+    position="sidebar"
+)
+```
+
+```python
+import mercury as mr
+
+_ = mr.Markdown(
+    "_Footer-style text_ shown at the bottom.",
+    position="bottom"
+)
+```
+
+
+## Basic Markdown Syntax 
+
+The Markdown widget supports standard Markdown syntax.
+
+### Headings
+
+```markdown
+# Heading 1
+## Heading 2
+### Heading 3
+```
+
+---
+
+### Emphasis
+
+```markdown
+*italic*  
+**bold**  
+***bold and italic***
+```
+
+---
+
+### Lists
+
+Unordered list:
+
+```markdown
+- Item A
+- Item B
+- Item C
+```
+
+Ordered list:
+
+```markdown
+1. First
+2. Second
+3. Third
+```
+
+---
+
+### Links
+
+```markdown
+[Mercury documentation](https://mljar.com/mercury)
+```
+
+---
+
+### Code
+
+Inline code:
+
+```markdown
+Use `print()` to display output.
+```
+
+---
+
+<Aside>
+Markdown support comes from the `markdown` Python package, which is bundled with Mercury.
+You do not need to install anything extra.
+</Aside>
+
+---
+
+## Markdown Props
+
+### text
+
+**type:** `string`
+
+Markdown content to render.
+
+---
+
+### position
+
+**type:** `"inline" | "sidebar" | "bottom"`
+
+Controls where the widget is rendered.
+
+Default: `"inline"`
+
+---
+
+### key
+
+**type:** `string`
+
+Unique identifier used to reuse the same widget instance.
+
+## Return value and display behavior
+
+`Markdown()` returns a `MarkdownWidget` and displays it immediately. Assign the
+return value to prevent IPython from automatically rendering the same widget a
+second time when the call is the final expression in a notebook cell:
+
+```python
+message = mr.Markdown("**Rendered once**")
+```
+
+Use `_ = mr.Markdown(...)` when you do not need to access the returned widget.

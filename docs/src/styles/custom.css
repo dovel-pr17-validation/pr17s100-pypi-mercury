@@ -1,0 +1,41 @@
+.docs-image{
+    display: block;
+    margin: 1rem auto;
+    border-radius: 6px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+    max-width: 90%
+}
+
+.docs-image-100{
+  display: block;
+  margin: 1rem auto;
+  border-radius: 6px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+  max-width: 100%
+}
+
+
+:root[data-theme='light'] {
+  --sl-color-text-accent: #007bff;
+}
+
+:root {
+  --sl-color-text-accent: #4da3ff;
+}
+
+.site-title {
+  font-weight: 900;
+}
+
+h1 {
+  font-weight: 900;
+}
+
+
+html[data-theme='light'] .custom-link {
+  color: black !important;
+}
+
+html[data-theme='dark'] .custom-link {
+  color: white !important;
+}

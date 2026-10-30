@@ -1,0 +1,145 @@
+---
+interface Props {
+  iframeSrc: string;
+  notebookUrl?: string;
+  openUrl?: string;
+  showOpenLink?: boolean;
+  height?: number;
+}
+
+const { iframeSrc, notebookUrl, openUrl, showOpenLink = true, height = 500 } = Astro.props;
+const openDemoUrl = openUrl ?? iframeSrc;
+const cloudUrl = "https://platform.mljar.com";
+---
+
+<div class="mercury-demo">
+  <div
+    class="mercury-demo__viewport"
+    data-src={iframeSrc}
+    data-height={height}
+    style={`--demo-height: ${height}px;`}
+  >
+    <div class="mercury-demo__placeholder">
+      <div class="mercury-demo__placeholder-text">
+        🚀 Load interactive demo
+        <span>Hover to start</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="mercury-demo__footer">
+    {notebookUrl && (
+      <a href={notebookUrl} target="_blank" rel="noreferrer" class="mercury-demo__link">
+        🛠️ Source code
+      </a>
+    )}
+    {showOpenLink && (
+    <a href={openDemoUrl} target="_blank" rel="noreferrer" class="mercury-demo__link mercury-demo__cloud-link">
+      ⛅ Open demo in new tab
+    </a>)}
+  </div>
+</div>
+
+<script is:inline>
+  function initMercuryDemos() {
+    document.querySelectorAll(".mercury-demo__viewport").forEach((viewport) => {
+      let mounted = false;
+
+      function mountIframe() {
+        if (mounted) return;
+        mounted = true;
+
+        const iframe = document.createElement("iframe");
+        iframe.src = viewport.dataset.src;
+        iframe.loading = "lazy";
+        const h = viewport.dataset.height || "500";
+        iframe.style.height = `${h}px`;
+        iframe.style.width = "100%";
+        iframe.style.border = "0";
+        // also ensure the viewport is exactly that height
+        viewport.style.height = `${h}px`;
+
+        viewport.innerHTML = "";
+        viewport.appendChild(iframe);
+      }
+
+      viewport.addEventListener("mouseenter", mountIframe, { once: true });
+      viewport.addEventListener("touchstart", mountIframe, { once: true });
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initMercuryDemos);
+  } else {
+    initMercuryDemos();
+  }
+</script>
+
+<style>
+  .mercury-demo {
+    margin-top: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  /* Viewport owns the size */
+  .mercury-demo__viewport {
+    height: var(--demo-height);
+    width: 100%;
+    position: relative;
+  }
+
+  /* Placeholder fills viewport */
+  .mercury-demo__placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #f5f7fa, #e9edf3);
+    cursor: pointer;
+  }
+
+  .mercury-demo__placeholder-text {
+    text-align: center;
+    font-size: 1.1rem;
+    color: #444;
+    font-weight: 600;
+  }
+
+  .mercury-demo__placeholder-text span {
+    display: block;
+    margin-top: 6px;
+    font-size: 0.9rem;
+    font-weight: normal;
+    color: #666;
+  }
+
+  .mercury-demo__footer {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    background: #f2f2f2;
+    padding: 6px 10px;
+    font-size: 0.85rem;
+    color: #555;
+    border-top: 1px solid #ddd;
+    gap: 0.75rem;
+    margin-top: 0px;
+  }
+
+  .mercury-demo__link {
+    color: #555;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .mercury-demo__link:hover {
+    text-decoration: underline;
+  }
+
+  .mercury-demo__cloud-link {
+    margin-left: auto;
+  }
+</style>

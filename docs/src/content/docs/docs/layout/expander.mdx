@@ -1,0 +1,226 @@
+---
+
+title: Expander
+description: How to use the Expander helper in the interactive Mercury App
+---
+
+import { Code } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import MercuryDemo from '../../../../components/MercuryDemoIframe.astro'
+
+The **Expander** helper lets you hide and show a block of content under a clickable header.
+It is useful for optional settings, advanced parameters, explanations, or details that should not be visible by default.
+
+`mr.Expander()` returns an output area, so you can write content into it using a `with` block.
+On rerun, reused expander content is cleared by default so it shows the latest execution result.
+
+## Live Demo
+
+You can check the `Expander` widget directly in this interactive example:
+
+<MercuryDemo
+  iframeSrc="https://docs.ismvp.org/mercury/layout-widgets?no-navbar"
+  notebookUrl="https://github.com/mljar/mercury/blob/main/docs/notebooks/layout-widgets.ipynb"
+/> 
+
+
+## Usage
+
+Call `mr.Expander()` to create an expander section.
+The function returns an output widget you can write into.
+
+### Basic Example
+
+**Code**
+
+```python
+import mercury as mr
+
+details = mr.Expander(label="Details")
+
+with details:
+    print("Hidden content")
+```
+
+
+### Expanded by Default
+
+Use `expanded=True` to open the expander on first render.
+
+**Code**
+
+```python
+import mercury as mr
+
+details = mr.Expander(
+    label="Advanced settings",
+    expanded=True
+)
+
+with details:
+    print("Shown immediately")
+```
+
+
+### Common Pattern: Advanced Options
+
+**Code**
+
+```python
+import mercury as mr
+
+# Basic controls
+name = mr.TextInput(label="Name")
+
+# Advanced section
+advanced = mr.Expander(label="Advanced")
+
+with advanced:
+    threshold = mr.NumberInput(label="Threshold", value=0.5, min=0.0, max=1.0, step=0.05)
+    refresh = mr.Checkbox(label="Auto-refresh")
+```
+
+
+### Border and Header Background
+
+By default, the expander has an outer border, a box background, and a shaded clickable header.
+You can turn off the outer border and header background independently.
+
+Use `show_border=False` and `header_background=False` when you want the expander
+to blend into the surrounding layout.
+
+**Code**
+
+```python
+import mercury as mr
+
+plain = mr.Expander(
+    label="More filters",
+    show_border=False,
+    header_background=False
+)
+
+with plain:
+    print("Borderless content")
+```
+
+You can also disable only one part:
+
+```python
+# No outer border, but keep the shaded header
+mr.Expander("Filters", show_border=False)
+
+# Keep the outer border, but make the header transparent
+mr.Expander("Filters", header_background=False)
+```
+
+
+### Append Previous Content
+
+By default, `append=False`, so content from the previous run is cleared before new content is written.
+Set `append=True` when you intentionally want the expander to accumulate output across runs.
+
+**Code**
+
+```python
+details = mr.Expander(label="Run log", append=True)
+
+with details:
+    print("This line is appended on each run")
+```
+
+### Clear Content Manually
+
+The returned expander output supports `.clear()`.
+Use it when you want to clear expander content manually from your notebook code.
+
+**Code**
+
+```python
+details = mr.Expander(label="Run log")
+
+details.clear()
+
+with details:
+    print("Fresh details")
+```
+
+
+## Expander Props
+
+### label
+
+**type:** `string`
+
+Text displayed in the expander header.
+The default is `"Details"`.
+
+---
+
+### expanded
+
+**type:** `bool`
+
+If `True`, the expander starts in the open state.
+The default is `False`.
+
+---
+
+### key
+
+**type:** `string`
+
+Unique identifier used to distinguish expanders with identical arguments.
+
+<Aside>
+If the same code cell is run again, Mercury reuses the previous expander instance unless a different `key` is specified.
+
+The `key` value is required when expanders are created inside loops.
+
+</Aside>
+
+---
+
+### show_border
+
+**type:** `bool`
+
+Controls the outer expander box.
+
+* `True` — show the border and box background (default)
+* `False` — remove the outer border and box background
+
+The default is `True`.
+
+---
+
+### header_background
+
+**type:** `bool`
+
+Controls the clickable header background.
+
+* `True` — use the default shaded header background (default)
+* `False` — make the header background transparent
+
+The default is `True`.
+
+---
+
+### append
+
+**type:** `bool`
+
+Controls what happens when Mercury reuses the same Expander instance:
+
+* `False` — clear previous expander content before writing new content (default)
+* `True` — keep previous content and append new output
+
+---
+
+## Notes
+
+* `mr.Expander()` returns an output area with a `.clear()` method. Put content inside using `with`.
+* By default, reruns replace previous expander content. Use `append=True` to accumulate content.
+* The expander uses a single unified border and smooth open/close animation.
+* Use expanders for optional or advanced settings to keep the UI clean.

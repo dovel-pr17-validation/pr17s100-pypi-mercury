@@ -1,0 +1,297 @@
+---
+
+title: UploadFile
+description: How to upload files in the interactive Mercury App
+---
+
+import { Code } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import MercuryDemo from '../../../../components/MercuryDemoIframe.astro'
+
+The **UploadFile** widget lets users upload one or more files using **drag & drop** or a **file picker**.
+Uploaded files are immediately available in Python as byte data, making it easy to load datasets, images, or documents in your Mercury App.
+
+## Live Demo
+
+You can try the `UploadFile` widget directly in this interactive example:
+
+<MercuryDemo
+  iframeSrc="https://docs.ismvp.org/mercury/input-widgets?no-navbar"
+  notebookUrl="https://github.com/mljar/mercury/blob/main/docs/notebooks/input-widgets.ipynb"
+/> 
+
+
+## Usage
+
+To create an UploadFile widget, provide a `label`.
+The uploaded content is available via `.value`, `.name`, `.files`, `.names`, or `.values_bytes`.
+
+### Basic Example
+
+**Code**
+
+```python
+import mercury as mr
+
+uploader = mr.UploadFile(
+    label="Upload CSV"
+)
+```
+
+To access the uploaded file:
+
+```python
+uploader.name
+uploader.value
+```
+
+* `name` → file name
+* `value` → file content as `bytes`
+
+With the default `multiple=False`, uploading another file replaces the previous one.
+
+---
+
+### Multiple Files
+
+Enable uploading multiple files using `multiple=True`.
+When `multiple=False`, the widget stores one file and a new upload replaces the previous file.
+When `multiple=True`, new uploads are appended to the current file list until the user removes them.
+
+**Code**
+
+```python
+uploader = mr.UploadFile(
+    label="Upload images",
+    multiple=True
+)
+```
+
+Iterate over uploaded files:
+
+```python
+for f in uploader:
+    print(f.name, len(f.value))
+```
+
+You can also access all files directly:
+
+```python
+uploader.files
+uploader.names
+uploader.values_bytes
+```
+
+---
+
+### File Size Limit
+
+Use `max_file_size` to limit the size of each uploaded file.
+The limit is checked in the browser before the file content is synced to Python.
+
+The value must be a positive integer followed by a supported unit:
+
+* `KB`
+* `MB`
+* `GB`
+
+**Code**
+
+```python
+uploader = mr.UploadFile(
+    label="Upload dataset",
+    max_file_size="10MB"
+)
+```
+
+If a file exceeds the limit, the user is notified and the file is not uploaded.
+Units are case-insensitive, so values like `"10mb"` are normalized to `"10MB"`.
+
+<Aside>
+`max_file_size` is enforced by the browser widget before file bytes are synced to Python.
+It is a per-file limit, not a combined total limit for all uploaded files.
+</Aside>
+
+---
+
+### Accepted File Types
+
+Use `accept` to restrict which file types a user can upload.
+The restriction is enforced at three levels: the browser file picker, drag-and-drop validation, and a final server-side check before the file reaches Python.
+
+**Code**
+
+```python
+uploader = mr.UploadFile(
+    label="Upload dataset",
+    accept=".csv"
+)
+```
+
+Pass a list to allow multiple types:
+
+```python
+uploader = mr.UploadFile(
+    label="Upload data",
+    accept=[".csv", ".tsv"]
+)
+```
+
+You can also use MIME types or wildcards:
+
+```python
+mr.UploadFile(accept="text/csv")      # exact MIME
+mr.UploadFile(accept="image/*")       # any image
+mr.UploadFile(accept=".csv,text/csv") # extension or MIME
+```
+
+* `".csv"` — file extension match (recommended for text formats)
+* `"text/csv"` — exact MIME type
+* `"image/*"` — MIME wildcard
+
+If a file does not match, the upload is blocked and the user receives an alert. The widget also displays a helper text below the upload area, for example *Accepted types: .csv,.tsv*.
+
+<Aside>
+Browser-reported MIME types can be empty or unreliable for some formats. For CSV, TSV, and similar files, use the file extension (`.csv`) rather than `"text/csv"` for more consistent validation.
+</Aside>
+
+---
+
+### Layout
+
+Use the `position` argument to control where the widget is displayed.
+The default is `position="sidebar"`.
+
+Available positions:
+
+* `"sidebar"` — displayed in the left sidebar (default)
+* `"inline"` — displayed in the main notebook output
+* `"bottom"` — displayed after all notebook cells
+
+**Code**
+
+```python
+mr.UploadFile(
+    label="Upload report",
+    position="inline"
+)
+```
+
+---
+
+## UploadFile Props
+
+### label
+
+**type:** `string`
+
+Text displayed above the upload area.
+The default is `"Upload file"`.
+
+---
+
+### max_file_size
+
+**type:** `string`
+
+Maximum allowed size per file.
+The value must be a positive integer followed by `KB`, `MB`, or `GB`.
+
+Examples:
+
+* `"500KB"`
+* `"10MB"`
+* `"1GB"`
+
+The default is `"100MB"`.
+The unit can be written as `KB`, `MB`, or `GB` and is case-insensitive.
+
+---
+
+### multiple
+
+**type:** `bool`
+
+If `True`, allows uploading multiple files.
+The default is `False`.
+
+With `multiple=False`, selecting or dropping a new file replaces the previous file.
+With `multiple=True`, selecting or dropping files appends them to the current list.
+
+---
+
+### accept
+
+**type:** `string`
+
+Restricts which file types can be uploaded.
+The default is `""` (all file types allowed).
+
+Supported formats:
+
+* File extension: `".csv"`, `".png"`
+* Exact MIME type: `"text/csv"`, `"application/json"`
+* MIME wildcard: `"image/*"`, `"video/*"`
+
+Pass a list or a comma-separated string to allow multiple types: `[".csv", ".tsv"]` or `".csv,.tsv"`.
+Invalid values raise a `ValueError`. When `multiple=True`, each file is validated independently.
+
+---
+
+### position
+
+**type:** `"sidebar" | "inline" | "bottom"`
+
+Controls where the widget is rendered:
+
+* **sidebar** — in the sidebar (default)
+* **inline** — directly in the notebook cell output
+* **bottom** — after all notebook cells
+
+---
+
+### disabled
+
+**type:** `bool`
+
+If `True`, the widget is visible but cannot be interacted with.
+The default is `False`.
+
+---
+
+### hidden
+
+**type:** `bool`
+
+If `True`, the widget exists in the UI state but is not rendered.
+The default is `False`.
+
+---
+
+### key
+
+**type:** `string`
+
+Unique identifier used to distinguish widgets with identical arguments.
+
+<Aside>
+If the same code cell is run again, Mercury reuses the previous widget instance unless a different `key` is specified.
+
+The `key` value is required when widgets are created inside loops.
+
+</Aside>
+
+---
+
+## Notes
+
+* Uploaded files are stored **in memory**, not saved to disk automatically.
+* `max_file_size` is a **per-file** browser-side limit.
+* Each uploaded file is represented as an `UploadedFile` object with:
+
+  * `.name` — file name
+  * `.value` — file content as `bytes`
+* For `multiple=False`, `.value` and `.name` refer to the **first file**.
+* For `multiple=True`, use `.files`, `.names`, `.values_bytes`, or iteration to handle all uploads.
+* `accept` is enforced in the browser file picker, on drag-and-drop, and again server-side
+  before the file reaches Python. For text formats like CSV, prefer `.csv` over `"text/csv"`.

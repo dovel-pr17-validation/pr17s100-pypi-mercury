@@ -1,0 +1,279 @@
+# Copyright MLJAR Sp. z o.o.
+# Licensed under the Apache License, Version 2.0 (Apache-2.0)
+
+from typing import Literal
+
+import anywidget
+import traitlets
+from IPython.display import display
+
+from .manager import MERCURY_MIMETYPE, WidgetsManager
+from .render_context import apply_widget_render_metadata, with_widget_render_metadata
+from .theme import THEME
+from .url_params import resolve_text_value
+
+Position = Literal["sidebar", "inline", "bottom"]
+
+
+def TextInput(
+    label: str = "Enter text",
+    value: str = "",
+    url_key: str = "",
+    position: Position = "sidebar",
+    disabled: bool = False,
+    hidden: bool = False,
+    rows: int = 1,
+    key: str = "",
+):
+    """
+    Create and display a TextInput widget.
+
+    This function instantiates a `TextInputWidget`. If a widget with the same
+    configuration already exists in `WidgetsManager`, the cached instance is reused.
+
+    Parameters
+    ----------
+    label : str
+        Text displayed above the input.
+        The default is `"Enter text"`.
+    value : str
+        Initial value.
+        The default is `""`.
+    url_key : str, optional
+        URL query parameter name used to override the initial value.
+        If the parameter is missing or invalid, the widget falls back to ``value``.
+    position : {"sidebar", "inline", "bottom"}, optional
+        Controls where the widget is displayed.
+    disabled : bool, optional
+        If `True`, the widget is visible but cannot be interacted with.
+    hidden : bool, optional
+        If `True`, the widget exists in the UI state but is not rendered.
+    rows : int, optional
+        Number of visible text rows. When greater than `1`, the widget is
+        rendered as a resizable textarea instead of a single-line input.
+        The default is `1`.
+    key : str, optional
+        Unique identifier used to differentiate widgets with the same parameters.
+
+    Returns
+    -------
+    TextInputWidget
+        The created or retrieved TextInput widget instance.
+    """
+    value = resolve_text_value(value=value, url_key=url_key)
+
+    args = [label, value, url_key, position, disabled, hidden, rows]
+    kwargs = {
+        "label": label,
+        "value": value,
+        "url_key": url_key,
+        "position": position,
+        "disabled": disabled,
+        "hidden": hidden,
+        "rows": rows,
+    }
+
+    code_uid = WidgetsManager.get_code_uid("TextInput", key=key, args=args, kwargs=kwargs)
+    cached = WidgetsManager.get_widget(code_uid)
+    if cached:
+        WidgetsManager.register_input(code_uid, cached, key=key, url_key=url_key)
+        apply_widget_render_metadata(cached)
+        display(cached)
+        return cached
+
+    instance = TextInputWidget(**with_widget_render_metadata(kwargs))
+    WidgetsManager.add_widget(code_uid, instance)
+    WidgetsManager.register_input(code_uid, instance, key=key, url_key=url_key)
+    display(instance)
+    return instance
+
+
+class TextInputWidget(anywidget.AnyWidget):
+    _esm = """
+    function render({ model, el }) {
+      const container = document.createElement("div");
+      container.classList.add("mljar-textinput-container");
+
+      const topLabel = document.createElement("div");
+      topLabel.classList.add("mljar-textinput-top-label");
+
+      const rows = model.get("rows") || 1;
+      const multiline = rows > 1;
+
+      const input = document.createElement(multiline ? "textarea" : "input");
+      if (multiline) {
+        input.rows = rows;
+      } else {
+        input.type = "text";
+      }
+      input.classList.add("mljar-textinput-input");
+
+      container.appendChild(topLabel);
+      container.appendChild(input);
+      el.appendChild(container);
+
+      let debounceTimer = null;
+
+      input.addEventListener("input", () => {
+        if (model.get("disabled")) return;
+        model.set("value", input.value);
+        if (debounceTimer) clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => model.save_changes(), 200);
+      });
+
+      function syncFromModel() {
+        topLabel.innerHTML = model.get("label") || "Enter text";
+        input.value = model.get("value") ?? "";
+
+        const disabled = !!model.get("disabled");
+        input.disabled = disabled;
+
+        const hidden = !!model.get("hidden");
+        container.style.display = hidden ? "none" : "flex";
+      }
+
+      model.on("change:value", syncFromModel);
+      model.on("change:label", syncFromModel);
+      model.on("change:disabled", syncFromModel);
+      model.on("change:hidden", syncFromModel);
+      model.on("change:rows", () => {
+        if (input.tagName === "TEXTAREA") {
+          input.rows = model.get("rows") || 1;
+        }
+      });
+
+      syncFromModel();
+
+      /*
+      // ---- read cell id (no DOM modifications) ----
+      const ID_ATTR = "data-cell-id";
+      const hostWithId = el.closest(`[${ID_ATTR}]`);
+      const cellId = hostWithId ? hostWithId.getAttribute(ID_ATTR) : null;
+
+      if (cellId) {
+        model.set("cell_id", cellId);
+        model.save_changes();
+        model.send({ type: "cell_id_detected", value: cellId });
+      } else {
+        const mo = new MutationObserver(() => {
+          const host = el.closest(`[${ID_ATTR}]`);
+          const newId = host?.getAttribute(ID_ATTR);
+          if (newId) {
+            model.set("cell_id", newId);
+            model.save_changes();
+            model.send({ type: "cell_id_detected", value: newId });
+            mo.disconnect();
+          }
+        });
+        mo.observe(document.body, { attributes: true, subtree: true, attributeFilter: [ID_ATTR] });
+      }
+      */
+    }
+    export default { render };
+    """
+
+    _css = f"""
+    .mljar-textinput-container {{
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      width: 100%;
+      min-width: 120px;
+      font-family: {THEME.get('font_family', 'Arial, sans-serif')};
+      font-size: {THEME.get('font_size', '14px')};
+      font-weight: {THEME.get('font_weight', 'normal')};
+      color: {THEME.get('text_color', '#222')};
+      padding-left: 4px;
+      padding-right: 4px;
+      box-sizing: border-box;
+    }}
+
+    .mljar-textinput-top-label {{
+      padding-top: 6px;
+      margin-bottom: 6px;
+      text-align: left;
+      width: 100%;
+      font-weight: 600;
+    }}
+
+    .mljar-textinput-input {{
+      width: 100%;
+      min-height: 40px;
+      padding: 9px 10px;
+      box-sizing: border-box;
+      border: {"1px solid " + THEME.get('border_color', '#ccc') if THEME.get('border_visible', True) else "none"};
+      border-radius: {THEME.get('border_radius', '6px')};
+      background: {THEME.get('widget_background_color', '#fff')};
+      color: {THEME.get('text_color', '#222')};
+      line-height: 1.4;
+
+      appearance: none !important;
+      background-color: {THEME.get('widget_background_color', '#fff')} !important;
+    }}
+
+    .mljar-textinput-input:focus {{
+      outline: none;
+      border-color: {THEME.get('focus_border_color', THEME.get('accent_color', '#4c7cf0'))};
+      box-shadow: none;
+    }}
+
+    textarea.mljar-textinput-input {{
+      font-family: inherit;
+      font-size: inherit;
+      resize: vertical;
+    }}
+
+    .mljar-textinput-input:disabled {{
+      background: #f5f5f5;
+      color: #888;
+      cursor: not-allowed;
+    }}
+
+    @media (max-width: 768px) {{
+      .mljar-textinput-input {{
+        min-height: 44px;
+        padding: 10px 12px;
+      }}
+    }}
+    """
+
+    value = traitlets.Unicode("").tag(sync=True)
+    label = traitlets.Unicode("Enter text").tag(sync=True)
+    url_key = traitlets.Unicode("").tag(sync=True)
+
+    disabled = traitlets.Bool(False).tag(sync=True)
+    hidden = traitlets.Bool(False).tag(sync=True)
+
+    rows = traitlets.Int(
+        default_value=1,
+        help="Number of visible text rows; values above 1 render a textarea",
+    ).tag(sync=True)
+
+    @traitlets.validate("rows")
+    def _validate_rows(self, proposal):
+        if proposal["value"] < 1:
+            raise traitlets.TraitError("rows must be a positive integer")
+        return proposal["value"]
+
+    position = traitlets.Enum(
+        values=["sidebar", "inline", "bottom"],
+        default_value="sidebar",
+        help="Widget placement: sidebar, inline, or bottom",
+    ).tag(sync=True)
+
+    cell_id = traitlets.Unicode(allow_none=True).tag(sync=True)
+    source_cell_id = traitlets.Unicode(default_value=None, allow_none=True).tag(sync=True)
+    render_slot_id = traitlets.Unicode(default_value=None, allow_none=True).tag(sync=True)
+    layout_path = traitlets.Unicode(default_value=None, allow_none=True).tag(sync=True)
+
+    def _repr_mimebundle_(self, **kwargs):
+        data = super()._repr_mimebundle_(**kwargs)
+        if len(data) > 1:
+          data[0][MERCURY_MIMETYPE] = {
+              "widget": type(self).__qualname__,
+              "model_id": self.model_id,
+              "position": self.position,
+          }
+          if "text/plain" in data[0]:
+              del data[0]["text/plain"]
+        return data

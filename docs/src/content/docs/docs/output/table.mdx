@@ -1,0 +1,197 @@
+---
+title: Table
+description: How to use the Table widget in the interactive Mercury App
+---
+
+import { Code } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+import { Aside } from '@astrojs/starlight/components';
+
+import simpleTable from "../../../../assets/table/simple-table.webp"
+import tableWithFeatures from "../../../../assets/table/table-with-features.webp"
+import customizedTable from "../../../../assets/table/customized-table.webp"
+
+The **Table** widget displays data in a structured, interactive tabular format. It supports column sorting (ascending/descending), quick filtering, and row selection for easier data exploration.
+
+## Import 
+
+<Code code={`from mercury import Table`} lang="python"/>
+
+## Usage 
+
+To use the Table widget, you only need to provide data. It works best with DataFrames (pandas or polars), but you can also pass lists of dict or dicts.
+
+**Example data** 
+
+<Code code={`import pandas as pd
+
+countries = ["Poland", "Germany", "France"]
+
+df = pd.DataFrame({
+    "Country": [countries[i % 3] for i in range(100)],
+    "Year": [2020 + (i % 10) for i in range(100)],
+    "GDP": [500 + (i * 25) for i in range(100)],
+})`} lang={"python"}/>
+
+**Code**
+
+<Code code={`t = Table(df)`} lang="python"/>
+
+<Aside type="note" title="Avoid duplicate output in notebooks">
+With the default `display_now=True`, `Table()` displays the table immediately
+and returns its widget. IPython also displays an unassigned object when it is
+the last expression in a cell, so a bare `Table(df)` call can render twice.
+
+Assign the result, as in `table = Table(df)`, when using immediate display. If
+you want to control when it appears, use `display_now=False` and call
+`display(table)` later—but do not combine explicit `display()` with the default
+immediate-display behavior.
+</Aside>
+
+**Preview**
+
+<Image 
+  src={simpleTable} 
+  alt="Simple Table" 
+  class="docs-image"
+/>
+
+### Table with features 
+
+You can easily add more features to your table, such as row selection or filtering.
+
+**Code**
+
+<Code code={`t = Table(df, search=True, select_rows=True)`} lang="python"/>
+
+**Preview**
+
+<Image 
+  src={tableWithFeatures} 
+  alt="Table with features" 
+  class="docs-image"
+/>
+
+### Get selected rows
+
+After enabling row selection, you may want to access all selected rows in one place — this is very easy to do.
+
+**Code** 
+
+<Code code={`# t is the variable that you assign the Table to
+t.selected_rows`} lang="python"/>
+
+### Customize your Table 
+
+You can also customize the Table’s appearance by changing the page size (number of rows per page), width, or height.
+
+**Code**
+
+<Code code={`t = Table(
+    df,
+    search=True,
+    select_rows=True,
+    page_size=20,
+    width="700px",
+    height="360px",
+)`} lang="python"/>
+
+**Preview**
+
+<Image 
+  src={customizedTable} 
+  alt="Customized Table" 
+  class="docs-image"
+/>
+
+### Create without immediate display
+
+By default, `Table()` displays the widget immediately. Set `display_now=False`
+when you want to create the widget first and display it later.
+
+**Code**
+
+<Code code={`from IPython.display import display
+
+t = Table(df, display_now=False)
+
+# display later
+display(t)`} lang="python"/>
+
+## Table Props
+
+### data (required)
+
+**type:** `DataFrame` or `list[dict]` or `dict` 
+
+The dataset displayed in the table. Accepts pandas/polars DataFrames or standard Python structures like lists of dictionaries.
+
+### page_size 
+
+**type:** `Integer`
+
+Sets how many rows are shown on a single page. Default is `50`.
+
+### select_rows
+
+**type:** `boolean`
+
+Enables selecting rows in the table. It's off by default (`False`).
+
+### search
+
+**type:** `boolean`
+
+Enables the search bar and allows filtering table. It's off by default (`False`).
+
+### width 
+
+**type:** `string`
+
+Sets the width of the table component. Accepts CSS size values like `100%`, `800px`, `50vw`, or `48rem`.
+Default is `100%`.
+
+### height
+
+**type:** `string | None`
+
+Sets the height of the scrollable table body. Accepts CSS size values like `360px`, `50vh`, or `24rem`.
+When `None`, Mercury keeps the current automatic table height behavior. Default is `None`.
+
+### show_index_col
+
+**type:** `boolean`
+
+Controls whether the original DataFrame index is displayed as a table column.
+Default is `False`.
+
+### position
+
+**type:** `"sidebar" | "inline" | "bottom"`
+
+Controls where the table is rendered in the Mercury layout.
+Default is `"inline"`.
+
+### display_now
+
+**type:** `boolean`
+
+Controls whether the table is displayed immediately after construction.
+Set to `False` when you want to return the widget and display it later yourself. Default is `True`.
+
+When `display_now=True`, assign the returned widget to a variable (or `_`) so
+IPython does not display the final expression a second time.
+
+### key
+
+**type:** `string`
+
+Optional identifier used to distinguish tables with the same data and options.
+Use it when you intentionally want separate table widget instances for the same dataset.
+
+## Notes
+
+* Table widgets are cached based on the input data content and constructor options.
+* `display_now` is not part of the cache key. It only controls whether the widget is displayed immediately.
+* Use `key` to force separate table instances for the same data.
+* Use either immediate display with assignment or `display_now=False` followed by `display()`, not both.
